@@ -1,0 +1,28 @@
+{
+  "name": "@shahata/inquirer-timeout-confirm-prompt",
+  "version": "0.1.1",
+  "description": "Inquirer timeout confirm prompt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shahata/inquirer-timeout-confirm-prompt.git"
+  },
+  "keywords": [
+    "inquirer",
+    "confirm",
+    "prompt"
+  ],
+  "author": "Shahar Talmi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shahata/inquirer-timeout-confirm-prompt/issues"
+  },
+  "homepage": "https://github.com/shahata/inquirer-timeout-confirm-prompt#readme",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "inquirer": "^6.2.1"
+  }
+}
