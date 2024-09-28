@@ -1,49 +1,64 @@
-const chalk = require('chalk');
-const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
+import {
+  createPrompt,
+  useState,
+  useKeypress,
+  usePrefix,
+  isEnterKey,
+  makeTheme,
+  useEffect,
+} from '@inquirer/core';
 
-class TimeoutConfirmPrompt extends ConfirmPrompt {
-  constructor(...args) {
-    super(...args);
-    this.opt.timeoutTips = this.opt.timeoutTips || (t => `(${t}s)`);
-    this.opt.timeout = this.opt.timeout || 10;
-  }
+const time = () => Math.ceil(new Date().getTime() / 1000);
 
-  _run(cb) {
-    this.targetDate = new Date(new Date().getTime() + this.opt.timeout * 1000);
-    this.timeout = Math.ceil((this.targetDate.getTime() - new Date().getTime()) / 1000);
+export default createPrompt((config, done) => {
+  const { transformer = answer => (answer ? 'Yes' : 'No') } = config;
+  const [status, setStatus] = useState('idle');
+  const [value, setValue] = useState('');
+  const [target] = useState(time() + config.timeout);
+  const [remaining, setRemaining] = useState(target - time());
+  const theme = makeTheme(config.theme);
+  const prefix = usePrefix({ status, theme });
+
+  useEffect(() => {
     const timerId = setInterval(() => {
-      this.timeout = Math.ceil((this.targetDate.getTime() - new Date().getTime()) / 1000);
-      if (this.timeout <= 0) {
-        clearInterval(timerId);
-        this.onEnd(this.opt.default === 'Y/n' ? 'Yes' : 'No');
+      const timeout = target - time();
+      if (timeout <= 0) {
+        let answer = config.default !== false;
+        setValue(transformer(answer));
+        setStatus('done');
+        done(answer);
       } else {
-        this.render();
+        setRemaining(timeout);
       }
     }, 1000);
+    return () => clearInterval(timerId);
+  }, []);
 
-    /* eslint-disable-next-line */
-    return super._run((...args) => {
-      clearInterval(timerId);
-      return cb(...args);
-    });
-  }
+  useKeypress((key, rl) => {
+    if (isEnterKey(key)) {
+      let answer = config.default !== false;
+      if (/^(y|yes)/i.test(value)) answer = true;
+      else if (/^(n|no)/i.test(value)) answer = false;
 
-  render(answer) {
-    let message = this.getQuestion();
-
-    if (this.timeout !== 0 && answer === undefined) {
-      message += this.opt.timeoutTips(this.timeout);
-    }
-
-    if (typeof answer === 'boolean') {
-      message += chalk.cyan(answer ? 'Yes' : 'No');
+      setValue(transformer(answer));
+      setStatus('done');
+      done(answer);
     } else {
-      message += this.rl.line;
+      setValue(rl.line);
     }
+  });
 
-    this.screen.render(message);
-    return this;
+  let formattedValue = '';
+  let defaultValue = '';
+  if (status === 'done') {
+    formattedValue = theme.style.answer(value);
+  } else {
+    formattedValue = `${config.timeoutTips(remaining)} ${value}`;
+    defaultValue = ` ${theme.style.defaultAnswer(
+      config.default === false ? 'y/N' : 'Y/n',
+    )}`;
   }
-}
 
-module.exports = TimeoutConfirmPrompt;
+  const message = theme.style.message(config.message, status);
+  return `${prefix} ${message}${defaultValue} ${formattedValue}`;
+});
