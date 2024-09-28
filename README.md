@@ -13,7 +13,7 @@ npm install --save @shahata/inquirer-timeout-confirm-prompt
 ## Use
 
 ``` javascript
-import timeoutConfirm from '@shahata/inquirer-time-confirm-prompt';
+import timeoutConfirm from '@shahata/inquirer-timeout-confirm-prompt';
 
 const answer = await timeoutConfirm({
   message: 'Are you sure you want to delete?', 
